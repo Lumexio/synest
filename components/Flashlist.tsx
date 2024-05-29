@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, View, StyleSheet, type ViewProps } from 'react-native';
+import { View, StyleSheet, type ViewProps } from 'react-native';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useGlobalStore from '@/store';
 import { Checkbox } from 'react-native-paper';
@@ -15,7 +15,7 @@ const List = ({ lightColor, darkColor }: ThemedViewProps) => {
   const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
   const { tasks, setTasks, getTasks } = useGlobalStore();
 
-  const handleCheck = (id) => {
+  const handleCheck = (id: string) => {
     const newTasks = tasks.map((task) => {
       if (task.id === id) {
         return { ...task, completed: !task.completed };
@@ -27,11 +27,11 @@ const List = ({ lightColor, darkColor }: ThemedViewProps) => {
     setTasks(newTasks);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = (id: string) => {
     const newTasks = tasks.filter((task) => task.id !== id);
     setTasks(newTasks);
   };
-  const handleEdit = (id) => {
+  const handleEdit = (id: string) => {
     const newTasks = tasks.find((task) => task.id === id);
     console.log(newTasks);
 
