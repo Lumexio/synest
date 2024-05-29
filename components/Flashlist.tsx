@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, View, StyleSheet } from 'react-native';
+import { Text, View, StyleSheet, type ViewProps } from 'react-native';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import useGlobalStore from '@/store';
 import { Checkbox } from 'react-native-paper';
@@ -7,7 +7,11 @@ import { Swipeable } from 'react-native-gesture-handler';
 import { FlashList } from '@shopify/flash-list';
 import { ThemedText } from './ThemedText';
 
-const List = ({ lightColor, darkColor }) => {
+export type ThemedViewProps = ViewProps & {
+  lightColor?: string;
+  darkColor?: string;
+};
+const List = ({ lightColor, darkColor }: ThemedViewProps) => {
   const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
   const { tasks, setTasks, getTasks } = useGlobalStore();
 
@@ -19,7 +23,7 @@ const List = ({ lightColor, darkColor }) => {
       return task;
     });
 
-    newTasks.sort((a, b) => a.completed - b.completed);
+    newTasks.sort((a, b) => Number(a.completed) - Number(b.completed));
     setTasks(newTasks);
   };
 
@@ -63,7 +67,9 @@ const List = ({ lightColor, darkColor }) => {
                   handleCheck(item.id);
                 }}
               />
-              <Text style={[styles.regularText, { color }]}>{item.title}</Text>
+              <ThemedText style={[styles.regularText, { color }]}>
+                {item.title}
+              </ThemedText>
             </View>
           </Swipeable>
         )}
