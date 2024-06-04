@@ -27,9 +27,12 @@ export default function HomeScreen({ lightColor, darkColor }: ThemedViewProps) {
     'background'
   );
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar translucent />
-      <View style={[{ backgroundColor }, styles.container]}>
+    <View style={[{ backgroundColor }, styles.container]}>
+      <GestureHandlerRootView>
+        <StatusBar
+          backgroundColor={backgroundColor}
+          animated={true}
+        ></StatusBar>
         <List />
         <FAB
           style={styles.fab}
@@ -42,8 +45,8 @@ export default function HomeScreen({ lightColor, darkColor }: ThemedViewProps) {
           open={isModalOpen}
           onClose={closeModal}
         ></BottomSheetModal>
-      </View>
-    </GestureHandlerRootView>
+      </GestureHandlerRootView>
+    </View>
   );
 }
 

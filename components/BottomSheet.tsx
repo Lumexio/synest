@@ -4,27 +4,46 @@ import BottomSheet from '@gorhom/bottom-sheet';
 import { BottomSheetView } from '@gorhom/bottom-sheet';
 import { TextInput } from 'react-native-gesture-handler';
 import useGlobalStore from '@/store';
-import { Button } from 'react-native-paper';
+
+const snapPoints = ['50%'];
 
 const BottomSheetModal = ({
+  taskData,
+  editCreateFlag,
   open,
   onClose,
 }: {
+  taskData: {
+    title: string;
+    description: string;
+    id: string;
+    completed: boolean;
+  };
+  editCreateFlag: string;
   open: boolean;
   onClose: () => void;
 }) => {
+  console.log('taskData', taskData, editCreateFlag);
+
   const { tasks, setTasks } = useGlobalStore();
   const sheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ['50%'], []);
-  const [isOPen, setIsOpen] = React.useState(true);
+  // const snapPoints = useMemo(() => ['50%'], []);
+  const [isOPen, setIsOpen] = React.useState(false);
 
   const [task, setTask] = React.useState({ title: '', description: '' });
 
+  useEffect(() => {
+    if (editCreateFlag === 'edit') {
+      task.title = taskData.title;
+      task.description = taskData.description;
+    }
+  }, []);
   useEffect(() => {
     if (open) {
       sheetRef.current?.snapToIndex(0);
     }
   }, [open]);
+
   // callbacks
 
   const handleTaskChange = (field: string, value: string) => {
@@ -44,10 +63,22 @@ const BottomSheetModal = ({
       onClose();
     }
   };
-
-  const handleSubmitEditing = () => {
+  const handleEditTask = () => {
     if (task.title && task.description) {
-      handleAddTask();
+      const newTasks = tasks.map((task) => {
+        if (task.id === taskData.id) {
+          return {
+            ...task,
+            title: task.title,
+            description: task.description,
+            completed: task.completed,
+          };
+        }
+        return task;
+      });
+      setTasks(newTasks);
+      setTask({ title: '', description: '' });
+      onClose();
     }
   };
 
@@ -82,7 +113,12 @@ const BottomSheetModal = ({
           value={task.description}
           placeholder="Enter task description"
         />
-        <Pressable style={styles.button} onPress={handleAddTask}>
+      </BottomSheetView>
+      <BottomSheetView style={styles.ContainerButton}>
+        <Pressable
+          style={styles.button}
+          onPress={editCreateFlag ? handleEditTask : handleAddTask}
+        >
           <Text style={styles.text}>Save</Text>
         </Pressable>
       </BottomSheetView>
@@ -96,9 +132,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 12,
     paddingHorizontal: 32,
-    borderRadius: 4,
+    borderRadius: 12,
     elevation: 3,
     backgroundColor: 'black',
+    marginEnd: 30,
   },
   text: {
     fontSize: 16,
@@ -130,6 +167,10 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     alignItems: 'center',
+  },
+  ContainerButton: {
+    flex: 1,
+    alignItems: 'flex-end',
   },
 });
 
