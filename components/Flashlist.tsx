@@ -11,7 +11,7 @@ export type ThemedViewProps = ViewProps & {
   lightColor?: string;
   darkColor?: string;
 };
-let taskData = {};
+let taskData = { title: '', description: '', id: '', completed: false };
 let editCreateFlag = '';
 interface ListProps {
   lightColor?: string;

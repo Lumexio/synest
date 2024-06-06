@@ -23,8 +23,6 @@ const BottomSheetModal = ({
   open: boolean;
   onClose: () => void;
 }) => {
-  console.log('taskData', taskData, editCreateFlag);
-
   const { tasks, setTasks } = useGlobalStore();
   const sheetRef = useRef<BottomSheet>(null);
   // const snapPoints = useMemo(() => ['50%'], []);
@@ -37,7 +35,7 @@ const BottomSheetModal = ({
       task.title = taskData.title;
       task.description = taskData.description;
     }
-  }, []);
+  }, [taskData, editCreateFlag]);
   useEffect(() => {
     if (open) {
       sheetRef.current?.snapToIndex(0);
@@ -64,18 +62,18 @@ const BottomSheetModal = ({
     }
   };
   const handleEditTask = () => {
-    if (task.title && task.description) {
-      const newTasks = tasks.map((task) => {
-        if (task.id === taskData.id) {
+    if (task.title) {
+      let newTasks = tasks.map((item) => {
+        if (item.id === taskData.id) {
           return {
-            ...task,
+            ...item,
             title: task.title,
             description: task.description,
-            completed: task.completed,
           };
         }
-        return task;
+        return item;
       });
+
       setTasks(newTasks);
       setTask({ title: '', description: '' });
       onClose();

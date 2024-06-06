@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, type ViewProps } from 'react-native';
+import { SafeAreaView, StyleSheet, View, type ViewProps } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheetModal from '@/components/BottomSheet';
 import List from '@/components/Flashlist';
@@ -27,7 +27,7 @@ export default function HomeScreen({ lightColor, darkColor }: ThemedViewProps) {
     'background'
   );
   return (
-    <View style={[{ backgroundColor }, styles.container]}>
+    <SafeAreaView style={[{ backgroundColor }, styles.container]}>
       <GestureHandlerRootView>
         <StatusBar
           backgroundColor={backgroundColor}
@@ -42,11 +42,13 @@ export default function HomeScreen({ lightColor, darkColor }: ThemedViewProps) {
           }}
         />
         <BottomSheetModal
+          editCreateFlag=""
+          taskData={{ title: '', description: '', id: '', completed: false }}
           open={isModalOpen}
           onClose={closeModal}
         ></BottomSheetModal>
       </GestureHandlerRootView>
-    </View>
+    </SafeAreaView>
   );
 }
 
