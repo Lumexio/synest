@@ -1,27 +1,19 @@
-import React, { FC, useState } from 'react';
-import { View, StyleSheet, type ViewProps } from 'react-native';
-import { useThemeColor } from '@/hooks/useThemeColor';
+import React, { useState } from 'react';
+import { View, StyleSheet } from 'react-native';
+
 import useGlobalStore from '@/store';
 import { Checkbox } from 'react-native-paper';
 import { Swipeable } from 'react-native-gesture-handler';
 import { FlashList } from '@shopify/flash-list';
 import { ThemedText } from './ThemedText';
 import BottomSheetModal from '@/components/BottomSheet';
-export type ThemedViewProps = ViewProps & {
-  lightColor?: string;
-  darkColor?: string;
-};
+
 let taskData = { title: '', description: '', id: '', completed: false };
 let editCreateFlag = '';
-interface ListProps {
-  lightColor?: string;
-  darkColor?: string;
-}
 
-const List: FC<ListProps> = ({ lightColor, darkColor }) => {
-  // const List = ({ lightColor, darkColor }: ThemedViewProps) => {
+const List = () => {
   let [isModalOpen, setModalOpen] = useState(false);
-  const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+
   const { tasks, setTasks, getTasks } = useGlobalStore();
 
   const closeModal = () => {
@@ -66,6 +58,7 @@ const List: FC<ListProps> = ({ lightColor, darkColor }) => {
   return (
     <View style={styles.listContainer}>
       <FlashList
+        refreshing={true}
         data={tasks}
         estimatedItemSize={100}
         keyExtractor={(item) => item.id}
@@ -81,9 +74,8 @@ const List: FC<ListProps> = ({ lightColor, darkColor }) => {
                   handleCheck(item.id);
                 }}
               />
-              <ThemedText style={[styles.regularText, { color }]}>
-                {item.title}
-              </ThemedText>
+
+              <ThemedText>{item.title}</ThemedText>
             </View>
           </Swipeable>
         )}

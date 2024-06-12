@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { SafeAreaView, StyleSheet, View, type ViewProps } from 'react-native';
+import { StyleSheet, View, type ViewProps } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheetModal from '@/components/BottomSheet';
-import List from '@/components/Flashlist';
+import List from '@/components/ListTask';
 import { FAB } from 'react-native-paper';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { StatusBar } from 'expo-status-bar';
-import { router } from 'expo-router';
+import { setStatusBarBackgroundColor } from 'expo-status-bar';
+
 export type ThemedViewProps = ViewProps & {
   lightColor?: string;
   darkColor?: string;
@@ -22,17 +22,18 @@ export default function HomeScreen({ lightColor, darkColor }: ThemedViewProps) {
   const closeModal = () => {
     setModalOpen(false);
   };
-  const backgroundColor = useThemeColor(
-    { light: lightColor, dark: darkColor },
+
+  const bColor = useThemeColor(
+    {
+      light: lightColor != undefined ? lightColor : '#FAFA55',
+      dark: darkColor != undefined ? darkColor : '#303030',
+    },
     'background'
   );
+  setStatusBarBackgroundColor(bColor, true);
   return (
-    <SafeAreaView style={[{ backgroundColor }, styles.container]}>
+    <View style={[{ backgroundColor: bColor }, styles.container]}>
       <GestureHandlerRootView>
-        <StatusBar
-          backgroundColor={backgroundColor}
-          animated={true}
-        ></StatusBar>
         <List />
         <FAB
           style={styles.fab}
@@ -48,7 +49,7 @@ export default function HomeScreen({ lightColor, darkColor }: ThemedViewProps) {
           onClose={closeModal}
         ></BottomSheetModal>
       </GestureHandlerRootView>
-    </SafeAreaView>
+    </View>
   );
 }
 

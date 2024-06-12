@@ -5,12 +5,14 @@ interface IGlobalTaskState {
   tasks: ITask[];
   setTasks: (tasks: ITask[]) => void;
   getTasks: () => ITask[];
+  modalBool: boolean;
 }
 
 const useGlobalStore = create<IGlobalTaskState>()(
   persist(
     (set, get) => ({
       tasks: [],
+      modalBool: false,
       setTasks: (newTasks: ITask[]) => set({ tasks: newTasks }),
       getTasks: () => get().tasks,
     }),
