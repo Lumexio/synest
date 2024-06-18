@@ -5,16 +5,21 @@ interface IGlobalTaskState {
   tasks: ITask[];
   setTasks: (tasks: ITask[]) => void;
   getTasks: () => ITask[];
-  modalBool: boolean;
+  setModalData: (modalData: IModalData) => void;
+  modalData: IModalData;
 }
 
 const useGlobalStore = create<IGlobalTaskState>()(
   persist(
     (set, get) => ({
       tasks: [],
-      modalBool: false,
+      modalData: { params: {}, modalBool: false, porpouse: '' },
       setTasks: (newTasks: ITask[]) => set({ tasks: newTasks }),
+
       getTasks: () => get().tasks,
+      setModalData: (newModalData: IModalData) =>
+        set({ modalData: newModalData }),
+      getModalData: () => get().modalData,
     }),
     {
       name: 'todo-store',

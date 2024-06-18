@@ -4,9 +4,8 @@ interface ITask {
   description: string;
   completed: boolean;
 }
-interface ITaskCompleted {
-  id: string;
-  title: string;
-  description: string;
-  completed: boolean;
+interface IModalData {
+  params: object;
+  porpouse: string;
+  modalBool: boolean;
 }

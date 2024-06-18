@@ -14,7 +14,8 @@ let editCreateFlag = '';
 const List = () => {
   let [isModalOpen, setModalOpen] = useState(false);
 
-  const { tasks, setTasks, getTasks } = useGlobalStore();
+  const { tasks, setTasks, getTasks, modalData, setModalData } =
+    useGlobalStore();
 
   const closeModal = () => {
     setModalOpen(false);
@@ -36,14 +37,20 @@ const List = () => {
     const newTasks = tasks.filter((task) => task.id !== id);
     setTasks(newTasks);
   };
+  // const handleEdit = (item: any) => {
+  //   taskData = item;
+  //   editCreateFlag = 'edit';
+  //   setModalOpen(true);
+
+  //   //setTasks(newTasks);
+  // };
   const handleEdit = (item: any) => {
-    taskData = item;
-    editCreateFlag = 'edit';
-    setModalOpen(true);
-
-    //setTasks(newTasks);
+    setModalData({
+      modalBool: true,
+      params: item,
+      porpouse: 'edit',
+    });
   };
-
   const renderRightActions = (id: string) => (
     <View style={styles.swipeContainer}>
       <ThemedText onPress={() => handleDelete(id)}>Delete</ThemedText>
