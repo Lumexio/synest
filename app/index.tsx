@@ -14,7 +14,10 @@ import useGlobalStore from '@/store';
 export default function HomeScreen() {
   const router = useRouter();
   const theme = useAppTheme();
-  const settings = useGlobalStore((state) => state.settings);
+  const { settings, tasks } = useGlobalStore((state) => ({
+    settings: state.settings,
+    tasks: state.tasks,
+  }));
   const [isModalOpen, setModalOpen] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
@@ -53,15 +56,33 @@ export default function HomeScreen() {
     day: 'numeric',
   });
 
-  const swipeLeft = Gesture.Pan().onEnd((event) => {
-    if (event.translationX < -60) {
-      runOnJS(router.push)('/drawer');
-    }
-  });
+  const swipeLeft = Gesture.Pan()
+    .activeOffsetX([-9999, -20])
+    .failOffsetY([-15, 15])
+    .onEnd((event) => {
+      if (event.translationX < -60) {
+        runOnJS(router.push)('/drawer');
+      }
+    });
+
+  const swipeUp = Gesture.Pan()
+    .activeOffsetY([-9999, -20])
+    .failOffsetX([-15, 15])
+    .onEnd((event) => {
+      if (event.translationY < -80) {
+        runOnJS(router.push)('/drawer');
+      }
+    });
+
+  const combinedGesture = Gesture.Race(swipeLeft, swipeUp);
 
   return (
-    <GestureDetector gesture={swipeLeft}>
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <GestureDetector gesture={combinedGesture}>
+      <Pressable
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+        onLongPress={() => router.push('/settings')}
+        delayLongPress={600}
+      >
         <View style={styles.header}>
           <View>
             <ThemedText type="title">{timeLabel}</ThemedText>
@@ -82,14 +103,18 @@ export default function HomeScreen() {
             <ProgressBar label="Year progress" progress={yearProgress} />
           )}
           {settings.showScreenTime && (
-            <ThemedText style={{ color: theme.colors.muted }}>
-              Screen time: enable Digital Wellbeing permissions
-            </ThemedText>
+            <Pressable onPress={() => router.push('/settings')}>
+              <ThemedText style={{ color: theme.colors.muted }}>
+                Screen time: enable Digital Wellbeing permissions
+              </ThemedText>
+            </Pressable>
           )}
           {settings.showWeather && (
-            <ThemedText style={{ color: theme.colors.muted }}>
-              Weather: add a location in Settings
-            </ThemedText>
+            <Pressable onPress={() => router.push('/settings')}>
+              <ThemedText style={{ color: theme.colors.muted }}>
+                Weather: add a location in Settings
+              </ThemedText>
+            </Pressable>
           )}
         </View>
 
@@ -97,12 +122,17 @@ export default function HomeScreen() {
           <View style={styles.tasksSection}>
             <ThemedText type="subtitle">Tasks</ThemedText>
             <List />
+            {tasks.length === 0 && (
+              <ThemedText style={{ color: theme.colors.muted }}>
+                No tasks yet. Tap + to add one.
+              </ThemedText>
+            )}
           </View>
         )}
 
         <Pressable style={styles.drawerLink} onPress={() => router.push('/drawer')}>
           <ThemedText type="defaultSemiBold" style={{ color: theme.colors.accent }}>
-            All Apps
+            All Apps ›
           </ThemedText>
         </Pressable>
 
@@ -118,7 +148,7 @@ export default function HomeScreen() {
           open={isModalOpen}
           onClose={closeModal}
         />
-      </View>
+      </Pressable>
     </GestureDetector>
   );
 }

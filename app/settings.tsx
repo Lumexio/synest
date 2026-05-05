@@ -1,16 +1,52 @@
-import { ScrollView, StyleSheet, Switch, TextInput, View, Pressable } from 'react-native';
+import { ScrollView, StyleSheet, Switch, TextInput, View, Pressable, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Linking } from 'react-native';
+import { RNLauncherKitHelper } from 'react-native-launcher-kit';
 import { ThemedText } from '@/components/ThemedText';
+import { AppIcon } from '@/components/AppIcon';
 import { useAppTheme } from '@/hooks/useAppTheme';
+import { useInstalledApps } from '@/hooks/useInstalledApps';
 import useGlobalStore from '@/store';
 import { accentOptions, backgroundOptions, fontOptions, themePresets } from '@/constants/theme';
-import { mockApps } from '@/constants/apps';
 import type { IAppSettings, ThemeMode, ThemePreset } from '@/types';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const theme = useAppTheme();
   const { settings, setSettings, toggleHiddenApp, setRenamedApp } = useGlobalStore();
+  const { apps: installedApps } = useInstalledApps();
+
+  const openAppPermissions = async () => {
+    try {
+      await Linking.openSettings();
+    } catch {
+      Alert.alert('Error', 'Unable to open app settings.');
+    }
+  };
+
+  const openAndroidSettings = async () => {
+    try {
+      RNLauncherKitHelper.goToSettings();
+    } catch {
+      try {
+        await Linking.openSettings();
+      } catch {
+        Alert.alert('Error', 'Unable to open Android settings.');
+      }
+    }
+  };
+
+  const openDefaultLauncher = async () => {
+    try {
+      await RNLauncherKitHelper.openSetDefaultLauncher();
+    } catch {
+      try {
+        await Linking.openURL('android.settings.HOME_SETTINGS');
+      } catch {
+        Alert.alert('Tip', 'Go to Android Settings > Apps > Default apps > Home app to set this launcher as default.');
+      }
+    }
+  };
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -23,6 +59,42 @@ export default function SettingsScreen() {
         <ThemedText type="subtitle">Settings</ThemedText>
       </View>
 
+      {/* ── Launcher ── */}
+      <ThemedText type="subtitle" style={styles.sectionTitle}>
+        Launcher
+      </ThemedText>
+      <Pressable
+        style={[styles.actionButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}
+        onPress={openDefaultLauncher}
+      >
+        <ThemedText type="defaultSemiBold">Set as default launcher</ThemedText>
+      </Pressable>
+
+      {/* ── Permissions ── */}
+      <ThemedText type="subtitle" style={styles.sectionTitle}>
+        Permissions
+      </ThemedText>
+      <ThemedText style={[styles.permissionsHint, { color: theme.colors.muted }]}>
+        Tap a button to open the relevant Android settings and grant permissions.
+      </ThemedText>
+      <View style={styles.permissionsRow}>
+        <Pressable
+          style={[styles.permissionButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}
+          onPress={openAppPermissions}
+        >
+          <ThemedText type="defaultSemiBold">App permissions</ThemedText>
+          <ThemedText style={{ color: theme.colors.muted, fontSize: 12 }}>Location, Calendar, etc.</ThemedText>
+        </Pressable>
+        <Pressable
+          style={[styles.permissionButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}
+          onPress={openAndroidSettings}
+        >
+          <ThemedText type="defaultSemiBold">Android Settings</ThemedText>
+          <ThemedText style={{ color: theme.colors.muted, fontSize: 12 }}>All system settings</ThemedText>
+        </Pressable>
+      </View>
+
+      {/* ── Theme mode ── */}
       <ThemedText type="subtitle" style={styles.sectionTitle}>
         Theme mode
       </ThemedText>
@@ -45,6 +117,7 @@ export default function SettingsScreen() {
         ))}
       </View>
 
+      {/* ── Theme preset ── */}
       <ThemedText type="subtitle" style={styles.sectionTitle}>
         Theme preset
       </ThemedText>
@@ -67,6 +140,7 @@ export default function SettingsScreen() {
         ))}
       </View>
 
+      {/* ── Accent color ── */}
       <ThemedText type="subtitle" style={styles.sectionTitle}>
         Accent color
       </ThemedText>
@@ -96,6 +170,7 @@ export default function SettingsScreen() {
         </Pressable>
       </View>
 
+      {/* ── Light background ── */}
       <ThemedText type="subtitle" style={styles.sectionTitle}>
         Light background
       </ThemedText>
@@ -125,6 +200,7 @@ export default function SettingsScreen() {
         </Pressable>
       </View>
 
+      {/* ── Dark background ── */}
       <ThemedText type="subtitle" style={styles.sectionTitle}>
         Dark background
       </ThemedText>
@@ -154,6 +230,7 @@ export default function SettingsScreen() {
         </Pressable>
       </View>
 
+      {/* ── Font ── */}
       <ThemedText type="subtitle" style={styles.sectionTitle}>
         Font
       </ThemedText>
@@ -178,6 +255,7 @@ export default function SettingsScreen() {
         ))}
       </View>
 
+      {/* ── Widgets ── */}
       <ThemedText type="subtitle" style={styles.sectionTitle}>
         Widgets
       </ThemedText>
@@ -197,6 +275,7 @@ export default function SettingsScreen() {
         </View>
       ))}
 
+      {/* ── App drawer ── */}
       <ThemedText type="subtitle" style={styles.sectionTitle}>
         App drawer
       </ThemedText>
@@ -215,30 +294,44 @@ export default function SettingsScreen() {
         />
       </View>
 
+      {/* ── Hide or rename apps ── */}
       <ThemedText type="subtitle" style={styles.sectionTitle}>
         Hide or rename apps
       </ThemedText>
-      {mockApps.map((app) => (
-        <View key={app.id} style={styles.appRow}>
-          <View style={styles.appInfo}>
-            <ThemedText type="defaultSemiBold">{app.name}</ThemedText>
-            <TextInput
-              value={settings.renamedApps[app.id] ?? ''}
-              onChangeText={(text) => setRenamedApp(app.id, text)}
-              placeholder="Rename"
-              placeholderTextColor={theme.colors.muted}
-              style={[
-                styles.renameInput,
-                { color: theme.colors.text, borderBottomColor: theme.colors.border },
-              ]}
+      {installedApps.length === 0 ? (
+        <ThemedText style={{ color: theme.colors.muted }}>
+          App list unavailable (requires a development build).
+        </ThemedText>
+      ) : (
+        installedApps.map((app) => (
+          <View key={app.packageName} style={styles.appRow}>
+            <View style={styles.appIconCol}>
+              <AppIcon icon={app.icon} size={32} />
+            </View>
+            <View style={styles.appInfo}>
+              <ThemedText type="defaultSemiBold">
+                {settings.renamedApps[app.packageName] ?? app.label}
+              </ThemedText>
+              <TextInput
+                value={settings.renamedApps[app.packageName] ?? ''}
+                onChangeText={(text) => setRenamedApp(app.packageName, text)}
+                placeholder="Rename"
+                placeholderTextColor={theme.colors.muted}
+                style={[
+                  styles.renameInput,
+                  { color: theme.colors.text, borderBottomColor: theme.colors.border },
+                ]}
+              />
+            </View>
+            <Switch
+              value={settings.hiddenApps.includes(app.packageName)}
+              onValueChange={() => toggleHiddenApp(app.packageName)}
             />
           </View>
-          <Switch
-            value={settings.hiddenApps.includes(app.id)}
-            onValueChange={() => toggleHiddenApp(app.id)}
-          />
-        </View>
-      ))}
+        ))
+      )}
+
+      <View style={styles.bottomPadding} />
     </ScrollView>
   );
 }
@@ -288,6 +381,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
   },
+  appIconCol: {
+    marginRight: 10,
+  },
   appInfo: {
     flex: 1,
     marginRight: 12,
@@ -296,5 +392,31 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     paddingVertical: 4,
     marginTop: 6,
+  },
+  actionButton: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  permissionsHint: {
+    fontSize: 13,
+    marginBottom: 8,
+  },
+  permissionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  permissionButton: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 2,
+  },
+  bottomPadding: {
+    height: 40,
   },
 });

@@ -94,6 +94,7 @@ const BottomSheetModal = ({
   return (
     <BottomSheet
       ref={sheetRef}
+      index={-1}
       enablePanDownToClose={true}
       snapPoints={snapPoints}
       onClose={() => setIsOpen(false)}
@@ -135,7 +136,7 @@ const BottomSheetModal = ({
       <BottomSheetView style={styles.ContainerButton}>
         <Pressable
           style={[styles.button, { backgroundColor: theme.colors.accent }]}
-          onPress={editCreateFlag ? handleEditTask : handleAddTask}
+          onPress={editCreateFlag === 'edit' ? handleEditTask : handleAddTask}
         >
           <Text style={styles.text}>Save</Text>
         </Pressable>
