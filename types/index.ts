@@ -29,4 +29,5 @@ export interface IAppSettings {
   autoFocusSearch: boolean;
   hiddenApps: string[];
   renamedApps: Record<string, string>;
+  favoriteApps: string[];
 }
