@@ -134,7 +134,7 @@ export default function AppDrawerScreen() {
     if (selectedApp) {
       Alert.alert(
         selectedApp.displayName,
-        `ID: ${selectedApp.id}\n${selectedApp.isFavorite ? 'Favourite' : 'Not favourite'}`
+        `ID: ${selectedApp.id}\n${selectedApp.isFavorite ? 'Favorite' : 'Not favorite'}`
       );
     }
     setMenuVisible(false);
@@ -306,7 +306,7 @@ export default function AppDrawerScreen() {
           <Menu.Item onPress={handleHideApp} title="Hide" />
           <Menu.Item
             onPress={handleToggleFavorite}
-            title={selectedApp?.isFavorite ? 'Remove from favourites' : 'Add to favourites'}
+            title={selectedApp?.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
           />
           <Menu.Item onPress={handleRename} title="Rename app" />
           <Menu.Item onPress={handleAppInfo} title="App info" />

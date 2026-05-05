@@ -70,7 +70,7 @@ const useGlobalStore = create<IGlobalTaskState>()(
           if (trimmed.length === 0) {
             delete renamedApps[appId];
           } else {
-            renamedApps[appId] = name;
+            renamedApps[appId] = trimmed;
           }
           return {
             settings: {
