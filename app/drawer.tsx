@@ -18,6 +18,7 @@ import { mockApps } from '@/constants/apps';
 import useGlobalStore from '@/store';
 
 const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const estimatedRowHeight = 52; // 12px vertical padding + text line height + icon size.
 
 type DrawerApp = (typeof mockApps)[number] & {
   displayName: string;
@@ -133,7 +134,7 @@ export default function AppDrawerScreen() {
     if (selectedApp) {
       Alert.alert(
         selectedApp.displayName,
-        `ID: ${selectedApp.id}\n${selectedApp.isFavorite ? 'A favorite' : 'Not a favorite'}`
+        `ID: ${selectedApp.id}\n${selectedApp.isFavorite ? 'Favorite' : 'Not a favorite'}`
       );
     }
     setMenuVisible(false);
@@ -227,7 +228,7 @@ export default function AppDrawerScreen() {
         <FlashList
           ref={listRef}
           data={apps}
-          estimatedItemSize={52}
+          estimatedItemSize={estimatedRowHeight}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <Pressable
