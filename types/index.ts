@@ -11,7 +11,14 @@ export interface IModalData {
 }
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type ThemePreset = 'mono' | 'paper' | 'midnight';
-export type FontFamily = 'system' | 'serif' | 'monospace';
+export type FontFamily =
+  | 'system'
+  | 'serif'
+  | 'monospace'
+  | 'sans-serif-light'
+  | 'sans-serif-thin'
+  | 'sans-serif-medium'
+  | 'sans-serif-condensed';
 
 export interface IAppSettings {
   themeMode: ThemeMode;

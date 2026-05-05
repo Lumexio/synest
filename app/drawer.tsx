@@ -12,15 +12,22 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { FlashList } from '@shopify/flash-list';
 import { Button, Dialog, Menu, Portal } from 'react-native-paper';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { runOnJS } from 'react-native-reanimated';
+import { RNLauncherKitHelper } from 'react-native-launcher-kit';
 import { ThemedText } from '@/components/ThemedText';
+import { AppIcon } from '@/components/AppIcon';
 import { useAppTheme } from '@/hooks/useAppTheme';
-import { mockApps } from '@/constants/apps';
+import { useInstalledApps } from '@/hooks/useInstalledApps';
 import useGlobalStore from '@/store';
 
 const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-const estimatedRowHeight = 52; // 12px vertical padding + text line height + icon size.
+const estimatedRowHeight = 52;
 
-type DrawerApp = (typeof mockApps)[number] & {
+type DrawerApp = {
+  packageName: string;
+  label: string;
+  icon: string;
   displayName: string;
   isFavorite: boolean;
 };
@@ -39,8 +46,9 @@ export default function AppDrawerScreen() {
   const [renameValue, setRenameValue] = useState('');
   const [selectedApp, setSelectedApp] = useState<DrawerApp | null>(null);
   const [menuAnchor, setMenuAnchor] = useState({ x: 0, y: 0 });
-  const { settings, toggleHiddenApp, toggleFavoriteApp, setRenamedApp } =
-    useGlobalStore();
+  const { settings, toggleHiddenApp, toggleFavoriteApp, setRenamedApp } = useGlobalStore();
+
+  const { apps: installedApps, loading } = useInstalledApps();
 
   useEffect(() => {
     if (settings.autoFocusSearch) {
@@ -48,22 +56,32 @@ export default function AppDrawerScreen() {
     }
   }, [settings.autoFocusSearch]);
 
-  const apps = useMemo(() => {
-    return mockApps
-      .filter((app) => !settings.hiddenApps.includes(app.id))
+  const apps = useMemo<DrawerApp[]>(() => {
+    return installedApps
+      .filter((app) => !settings.hiddenApps.includes(app.packageName))
       .map((app) => ({
-        ...app,
-        displayName: settings.renamedApps[app.id] ?? app.name,
-        isFavorite: settings.favoriteApps.includes(app.id),
+        packageName: app.packageName,
+        label: app.label,
+        icon: app.icon,
+        displayName: settings.renamedApps[app.packageName] ?? app.label,
+        isFavorite: settings.favoriteApps.includes(app.packageName),
       }))
-      .filter((app) => app.displayName.toLowerCase().includes(query.trim().toLowerCase()))
+      .filter((app) =>
+        app.displayName.toLowerCase().includes(query.trim().toLowerCase())
+      )
       .sort((a, b) => {
         if (a.isFavorite !== b.isFavorite) {
           return a.isFavorite ? -1 : 1;
         }
         return a.displayName.localeCompare(b.displayName);
       });
-  }, [query, settings.hiddenApps, settings.renamedApps, settings.favoriteApps]);
+  }, [
+    installedApps,
+    query,
+    settings.hiddenApps,
+    settings.renamedApps,
+    settings.favoriteApps,
+  ]);
 
   const letterIndex = useMemo(() => {
     const map = new Map<string, number>();
@@ -77,19 +95,10 @@ export default function AppDrawerScreen() {
     return map;
   }, [apps]);
 
-  const handleOpenApp = async (app: DrawerApp) => {
-    if (!app.url) {
-      Alert.alert('Unavailable', 'Launching this app is not supported in the demo.');
-      return;
-    }
+  const handleOpenApp = (app: DrawerApp) => {
     try {
-      const canOpen = await Linking.canOpenURL(app.url);
-      if (!canOpen) {
-        Alert.alert('Unavailable', 'This app cannot be opened on this device.');
-        return;
-      }
-      await Linking.openURL(app.url);
-    } catch (error) {
+      RNLauncherKitHelper.launchApplication(app.packageName);
+    } catch {
       Alert.alert('Error', 'Failed to open the app.');
     }
   };
@@ -102,14 +111,14 @@ export default function AppDrawerScreen() {
 
   const handleHideApp = () => {
     if (selectedApp) {
-      toggleHiddenApp(selectedApp.id);
+      toggleHiddenApp(selectedApp.packageName);
     }
     setMenuVisible(false);
   };
 
   const handleToggleFavorite = () => {
     if (selectedApp) {
-      toggleFavoriteApp(selectedApp.id);
+      toggleFavoriteApp(selectedApp.packageName);
     }
     setMenuVisible(false);
   };
@@ -125,24 +134,38 @@ export default function AppDrawerScreen() {
 
   const handleRenameSave = () => {
     if (selectedApp) {
-      setRenamedApp(selectedApp.id, renameValue);
+      setRenamedApp(selectedApp.packageName, renameValue);
     }
     setRenameVisible(false);
   };
 
-  const handleAppInfo = () => {
+  const handleAppInfo = async () => {
     if (selectedApp) {
-      Alert.alert(
-        selectedApp.displayName,
-        `ID: ${selectedApp.id}\n${selectedApp.isFavorite ? 'Favorite' : 'Not a favorite'}`
-      );
+      try {
+        await Linking.openURL(
+          `intent:#Intent;action=android.settings.APPLICATION_DETAILS_SETTINGS;data=package%3A${selectedApp.packageName};end`
+        );
+      } catch {
+        Alert.alert(
+          selectedApp.displayName,
+          `Package: ${selectedApp.packageName}`
+        );
+      }
     }
     setMenuVisible(false);
   };
 
-  const handleUninstall = () => {
+  const handleUninstall = async () => {
     setMenuVisible(false);
-    Alert.alert('Unavailable', 'Uninstalling apps is not supported in the demo.');
+    if (selectedApp) {
+      try {
+        await Linking.openURL(
+          `intent:#Intent;action=android.intent.action.DELETE;data=package%3A${selectedApp.packageName};end`
+        );
+      } catch {
+        Alert.alert('Unavailable', 'Unable to open uninstall dialog.');
+      }
+    }
   };
 
   const resolveScrollIndex = (letter: string) => {
@@ -180,7 +203,9 @@ export default function AppDrawerScreen() {
     }
     const relativeY = event.nativeEvent.pageY - indexLayout.top;
     const clampedY = Math.max(0, Math.min(indexLayout.height - 1, relativeY));
-    const letterPosition = Math.floor((clampedY / indexLayout.height) * alphabet.length);
+    const letterPosition = Math.floor(
+      (clampedY / indexLayout.height) * alphabet.length
+    );
     const letter = alphabet[letterPosition];
     setActiveLetter(letter);
     scrollToLetter(letter);
@@ -192,146 +217,168 @@ export default function AppDrawerScreen() {
     });
   };
 
+  const swipeRight = Gesture.Pan()
+    .activeOffsetX([20, 9999])
+    .failOffsetY([-15, 15])
+    .onEnd((event) => {
+      if (event.translationX > 60) {
+        runOnJS(router.back)();
+      }
+    });
+
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
-          <ThemedText type="link" style={{ color: theme.colors.accent }}>
-            Home
-          </ThemedText>
-        </Pressable>
-        <ThemedText type="subtitle">All Apps</ThemedText>
-        <Pressable onPress={() => router.push('/settings')}>
-          <ThemedText type="link" style={{ color: theme.colors.accent }}>
-            Settings
-          </ThemedText>
-        </Pressable>
-      </View>
+    <GestureDetector gesture={swipeRight}>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()}>
+            <ThemedText type="link" style={{ color: theme.colors.accent }}>
+              Home
+            </ThemedText>
+          </Pressable>
+          <ThemedText type="subtitle">All Apps</ThemedText>
+          <Pressable onPress={() => router.push('/settings')}>
+            <ThemedText type="link" style={{ color: theme.colors.accent }}>
+              Settings
+            </ThemedText>
+          </Pressable>
+        </View>
 
-      <View
-        style={[
-          styles.searchContainer,
-          { borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
-        ]}
-      >
-        <TextInput
-          ref={searchRef}
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Search apps"
-          placeholderTextColor={theme.colors.muted}
-          style={[styles.searchInput, { color: theme.colors.text }]}
-        />
-      </View>
-
-      <View style={styles.listWrapper}>
-        <FlashList
-          ref={listRef}
-          data={apps}
-          estimatedItemSize={estimatedRowHeight}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <Pressable
-              onPress={() => handleOpenApp(item)}
-              onLongPress={(event) => handleLongPress(event, item)}
-              style={({ pressed }) => [
-                styles.row,
-                pressed && { opacity: 0.6 },
-              ]}
-            >
-              {settings.showIcons && (
-                <MaterialCommunityIcons
-                  name={item.icon as keyof typeof MaterialCommunityIcons.glyphMap}
-                  size={20}
-                  color={theme.colors.muted}
-                  style={styles.icon}
-                />
-              )}
-              <ThemedText type="defaultSemiBold" style={styles.rowText}>
-                {item.displayName}
-              </ThemedText>
-              {item.isFavorite && (
-                <MaterialCommunityIcons
-                  name="star"
-                  size={16}
-                  color={theme.colors.accent}
-                  style={styles.favoriteIcon}
-                />
-              )}
+        <View
+          style={[
+            styles.searchContainer,
+            { borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
+          ]}
+        >
+          <TextInput
+            ref={searchRef}
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Search apps"
+            placeholderTextColor={theme.colors.muted}
+            style={[styles.searchInput, { color: theme.colors.text }]}
+          />
+          {query.length > 0 && (
+            <Pressable onPress={() => setQuery('')}>
+              <MaterialCommunityIcons
+                name="close-circle"
+                size={18}
+                color={theme.colors.muted}
+              />
             </Pressable>
           )}
-          ListEmptyComponent={
-            <ThemedText style={{ color: theme.colors.muted }}>
-              No matches. Try a different search.
-            </ThemedText>
-          }
-          contentContainerStyle={styles.listContent}
-          style={styles.list}
-          keyboardShouldPersistTaps="handled"
-        />
-        <View
-          ref={indexRef}
-          style={[styles.indexContainer, { backgroundColor: theme.colors.surface }]}
-          onLayout={handleIndexLayout}
-          onStartShouldSetResponder={() => true}
-          onMoveShouldSetResponder={() => true}
-          onResponderGrant={handleIndexTouch}
-          onResponderMove={handleIndexTouch}
-          onResponderRelease={() => setActiveLetter(null)}
-        >
-          {alphabet.map((letter) => (
-            <ThemedText
-              key={letter}
-              style={[
-                styles.indexLetter,
-                {
-                  color:
-                    activeLetter === letter ? theme.colors.accent : theme.colors.muted,
-                },
-              ]}
-            >
-              {letter}
-            </ThemedText>
-          ))}
         </View>
-      </View>
-      <Portal>
-        <Menu
-          visible={menuVisible}
-          onDismiss={() => setMenuVisible(false)}
-          anchor={menuAnchor}
-          contentStyle={[styles.menuContent, { backgroundColor: theme.colors.surface }]}
-        >
-          <Menu.Item onPress={handleUninstall} title="Uninstall" />
-          <Menu.Item onPress={handleHideApp} title="Hide" />
-          <Menu.Item
-            onPress={handleToggleFavorite}
-            title={selectedApp?.isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
+
+        <View style={styles.listWrapper}>
+          <FlashList
+            ref={listRef}
+            data={apps}
+            estimatedItemSize={estimatedRowHeight}
+            keyExtractor={(item) => item.packageName}
+            renderItem={({ item }) => (
+              <Pressable
+                onPress={() => handleOpenApp(item)}
+                onLongPress={(event) => handleLongPress(event, item)}
+                style={({ pressed }) => [styles.row, pressed && { opacity: 0.6 }]}
+              >
+                {settings.showIcons && (
+                  <View style={styles.icon}>
+                    <AppIcon icon={item.icon} size={28} />
+                  </View>
+                )}
+                <ThemedText type="defaultSemiBold" style={styles.rowText}>
+                  {item.displayName}
+                </ThemedText>
+                {item.isFavorite && (
+                  <MaterialCommunityIcons
+                    name="star"
+                    size={16}
+                    color={theme.colors.accent}
+                    style={styles.favoriteIcon}
+                  />
+                )}
+              </Pressable>
+            )}
+            ListEmptyComponent={
+              <ThemedText style={{ color: theme.colors.muted }}>
+                {loading
+                  ? 'Loading apps\u2026'
+                  : 'No matches. Try a different search.'}
+              </ThemedText>
+            }
+            contentContainerStyle={styles.listContent}
+            style={styles.list}
+            keyboardShouldPersistTaps="handled"
           />
-          <Menu.Item onPress={handleRename} title="Rename app" />
-          <Menu.Item onPress={handleAppInfo} title="App info" />
-        </Menu>
-        <Dialog visible={renameVisible} onDismiss={() => setRenameVisible(false)}>
-          <Dialog.Title>Rename app</Dialog.Title>
-          <Dialog.Content>
-            <TextInput
-              value={renameValue}
-              onChangeText={setRenameValue}
-              placeholder="Enter new name"
-              placeholderTextColor={theme.colors.muted}
-              style={[
-                styles.renameInput,
-                { color: theme.colors.text, borderBottomColor: theme.colors.border },
-              ]}
+          <View
+            ref={indexRef}
+            style={[styles.indexContainer, { backgroundColor: theme.colors.surface }]}
+            onLayout={handleIndexLayout}
+            onStartShouldSetResponder={() => true}
+            onMoveShouldSetResponder={() => true}
+            onResponderGrant={handleIndexTouch}
+            onResponderMove={handleIndexTouch}
+            onResponderRelease={() => setActiveLetter(null)}
+          >
+            {alphabet.map((letter) => (
+              <ThemedText
+                key={letter}
+                style={[
+                  styles.indexLetter,
+                  {
+                    color:
+                      activeLetter === letter
+                        ? theme.colors.accent
+                        : theme.colors.muted,
+                  },
+                ]}
+              >
+                {letter}
+              </ThemedText>
+            ))}
+          </View>
+        </View>
+        <Portal>
+          <Menu
+            visible={menuVisible}
+            onDismiss={() => setMenuVisible(false)}
+            anchor={menuAnchor}
+            contentStyle={[styles.menuContent, { backgroundColor: theme.colors.surface }]}
+          >
+            <Menu.Item onPress={handleUninstall} title="Uninstall" />
+            <Menu.Item onPress={handleHideApp} title="Hide" />
+            <Menu.Item
+              onPress={handleToggleFavorite}
+              title={
+                selectedApp?.isFavorite
+                  ? 'Remove from Favorites'
+                  : 'Add to Favorites'
+              }
             />
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setRenameVisible(false)}>Cancel</Button>
-            <Button onPress={handleRenameSave}>Save</Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
-    </View>
+            <Menu.Item onPress={handleRename} title="Rename app" />
+            <Menu.Item onPress={handleAppInfo} title="App info" />
+          </Menu>
+          <Dialog visible={renameVisible} onDismiss={() => setRenameVisible(false)}>
+            <Dialog.Title>Rename app</Dialog.Title>
+            <Dialog.Content>
+              <TextInput
+                value={renameValue}
+                onChangeText={setRenameValue}
+                placeholder="Enter new name"
+                placeholderTextColor={theme.colors.muted}
+                style={[
+                  styles.renameInput,
+                  { color: theme.colors.text, borderBottomColor: theme.colors.border },
+                ]}
+              />
+            </Dialog.Content>
+            <Dialog.Actions>
+              <Button onPress={() => setRenameVisible(false)}>Cancel</Button>
+              <Button onPress={handleRenameSave}>Save</Button>
+            </Dialog.Actions>
+          </Dialog>
+        </Portal>
+      </View>
+    </GestureDetector>
   );
 }
 
@@ -353,9 +400,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   searchInput: {
     fontSize: 16,
+    flex: 1,
   },
   listWrapper: {
     flex: 1,
@@ -374,6 +424,7 @@ const styles = StyleSheet.create({
   },
   rowText: {
     fontSize: 18,
+    flex: 1,
   },
   icon: {
     marginRight: 12,

@@ -67,7 +67,6 @@ const List = () => {
   return (
     <View style={styles.listContainer}>
       <FlashList
-        refreshing={true}
         data={tasks}
         estimatedItemSize={100}
         keyExtractor={(item) => item.id}

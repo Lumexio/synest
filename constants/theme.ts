@@ -77,6 +77,10 @@ export const fontOptions: { key: FontFamily; label: string; fontFamily?: string 
   { key: 'system', label: 'System' },
   { key: 'serif', label: 'Serif', fontFamily: 'serif' },
   { key: 'monospace', label: 'Mono', fontFamily: 'monospace' },
+  { key: 'sans-serif-light', label: 'Light', fontFamily: 'sans-serif-light' },
+  { key: 'sans-serif-thin', label: 'Thin', fontFamily: 'sans-serif-thin' },
+  { key: 'sans-serif-medium', label: 'Medium', fontFamily: 'sans-serif-medium' },
+  { key: 'sans-serif-condensed', label: 'Condensed', fontFamily: 'sans-serif-condensed' },
 ];
 
 export type ThemeColorName = keyof ThemeColors;
