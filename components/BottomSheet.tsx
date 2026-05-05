@@ -4,6 +4,7 @@ import BottomSheet from '@gorhom/bottom-sheet';
 import { BottomSheetView } from '@gorhom/bottom-sheet';
 import { TextInput } from 'react-native-gesture-handler';
 import useGlobalStore from '@/store';
+import { useAppTheme } from '@/hooks/useAppTheme';
 
 const snapPoints = ['50%'];
 
@@ -24,6 +25,7 @@ const BottomSheetModal = ({
   onClose: () => void;
 }) => {
   const { tasks, setTasks } = useGlobalStore();
+  const theme = useAppTheme();
   const sheetRef = useRef<BottomSheet>(null);
   // const snapPoints = useMemo(() => ['50%'], []);
   const [isOPen, setIsOpen] = React.useState(false);
@@ -96,25 +98,43 @@ const BottomSheetModal = ({
       snapPoints={snapPoints}
       onClose={() => setIsOpen(false)}
       onChange={handleSheetChanges}
+      backgroundStyle={{ backgroundColor: theme.colors.surface }}
+      handleIndicatorStyle={{ backgroundColor: theme.colors.muted }}
     >
       <BottomSheetView style={styles.contentContainer}>
-        <Text style={styles.textTitle}>Task Details</Text>
+        <Text style={[styles.textTitle, { color: theme.colors.text }]}>
+          Task Details
+        </Text>
         <TextInput
           onChangeText={(text) => handleTaskChange('title', text)}
-          style={styles.textin}
+          style={[
+            styles.textin,
+            {
+              color: theme.colors.text,
+              borderBottomColor: theme.colors.border,
+            },
+          ]}
           value={task.title}
           placeholder="Enter task title"
+          placeholderTextColor={theme.colors.muted}
         />
         <TextInput
           onChangeText={(text) => handleTaskChange('description', text)}
-          style={styles.textin}
+          style={[
+            styles.textin,
+            {
+              color: theme.colors.text,
+              borderBottomColor: theme.colors.border,
+            },
+          ]}
           value={task.description}
           placeholder="Enter task description"
+          placeholderTextColor={theme.colors.muted}
         />
       </BottomSheetView>
       <BottomSheetView style={styles.ContainerButton}>
         <Pressable
-          style={styles.button}
+          style={[styles.button, { backgroundColor: theme.colors.accent }]}
           onPress={editCreateFlag ? handleEditTask : handleAddTask}
         >
           <Text style={styles.text}>Save</Text>
@@ -151,7 +171,7 @@ const styles = StyleSheet.create({
   textin: {
     height: 20,
     width: 350,
-    borderColor: 'gray',
+    borderBottomWidth: 1,
     margin: 15,
 
     fontSize: 20,

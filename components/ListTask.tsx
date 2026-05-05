@@ -7,12 +7,14 @@ import { Swipeable } from 'react-native-gesture-handler';
 import { FlashList } from '@shopify/flash-list';
 import { ThemedText } from './ThemedText';
 import BottomSheetModal from '@/components/BottomSheet';
+import { useAppTheme } from '@/hooks/useAppTheme';
 
 let taskData = { title: '', description: '', id: '', completed: false };
 let editCreateFlag = '';
 
 const List = () => {
   let [isModalOpen, setModalOpen] = useState(false);
+  const theme = useAppTheme();
 
   const { tasks, setTasks, getTasks, modalData, setModalData } =
     useGlobalStore();
@@ -48,16 +50,16 @@ const List = () => {
     setModalData({
       modalBool: true,
       params: item,
-      porpouse: 'edit',
+      purpose: 'edit',
     });
   };
   const renderRightActions = (id: string) => (
-    <View style={styles.swipeContainer}>
+    <View style={[styles.swipeContainer, { backgroundColor: theme.colors.surface }]}>
       <ThemedText onPress={() => handleDelete(id)}>Delete</ThemedText>
     </View>
   );
   const renderLeftActions = (item: object) => (
-    <View style={styles.swipeContainer}>
+    <View style={[styles.swipeContainer, { backgroundColor: theme.colors.surface }]}>
       <ThemedText onPress={() => handleEdit(item)}>Edit</ThemedText>
     </View>
   );
@@ -74,7 +76,13 @@ const List = () => {
             renderLeftActions={() => renderLeftActions(item)}
             renderRightActions={() => renderRightActions(item.id)}
           >
-            <View key={item.id} style={styles.itemContainer}>
+            <View
+              key={item.id}
+              style={[
+                styles.itemContainer,
+                { borderBottomColor: theme.colors.border },
+              ]}
+            >
               <Checkbox
                 status={item.completed ? 'checked' : 'unchecked'}
                 onPress={() => {
@@ -112,12 +120,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
+    borderBottomWidth: 1,
   },
 
   swipeContainer: {
     justifyContent: 'center',
     alignItems: 'center',
     width: 80,
-    backgroundColor: 'glassblue',
   },
 });
