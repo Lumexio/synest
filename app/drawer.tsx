@@ -67,8 +67,7 @@ export default function AppDrawerScreen() {
   const letterIndex = useMemo(() => {
     const map = new Map<string, number>();
     apps.forEach((app, index) => {
-      const trimmed = app.displayName.trim();
-      const firstChar = trimmed.charAt(0).toUpperCase();
+      const firstChar = app.displayName.charAt(0).toUpperCase();
       const normalized = alphabet.includes(firstChar) ? firstChar : '#';
       if (!map.has(normalized)) {
         map.set(normalized, index);
@@ -134,7 +133,7 @@ export default function AppDrawerScreen() {
     if (selectedApp) {
       Alert.alert(
         selectedApp.displayName,
-        `ID: ${selectedApp.id}\n${selectedApp.isFavorite ? 'Favorite' : 'Not a favorite'}`
+        `ID: ${selectedApp.id}\n${selectedApp.isFavorite ? 'A favorite' : 'Not a favorite'}`
       );
     }
     setMenuVisible(false);
@@ -181,7 +180,7 @@ export default function AppDrawerScreen() {
     const relativeY = event.nativeEvent.pageY - indexLayout.top;
     const clampedY = Math.max(0, Math.min(indexLayout.height - 1, relativeY));
     const letterPosition = Math.floor((clampedY / indexLayout.height) * alphabet.length);
-    const letter = alphabet[Math.max(0, Math.min(alphabet.length - 1, letterPosition))];
+    const letter = alphabet[letterPosition];
     setActiveLetter(letter);
     scrollToLetter(letter);
   };
