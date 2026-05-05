@@ -50,7 +50,7 @@ const List = () => {
     setModalData({
       modalBool: true,
       params: item,
-      porpouse: 'edit',
+      purpose: 'edit',
     });
   };
   const renderRightActions = (id: string) => (

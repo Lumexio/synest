@@ -5,6 +5,7 @@ import { useAppTheme } from '@/hooks/useAppTheme';
 import useGlobalStore from '@/store';
 import { accentOptions, backgroundOptions, fontOptions, themePresets } from '@/constants/theme';
 import { mockApps } from '@/constants/apps';
+import type { IAppSettings, ThemeMode, ThemePreset } from '@/types';
 
 export default function SettingsScreen() {
   const router = useRouter();

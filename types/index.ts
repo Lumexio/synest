@@ -1,19 +1,19 @@
-interface ITask {
+export interface ITask {
   id: string;
   title: string;
   description: string;
   completed: boolean;
 }
-interface IModalData {
+export interface IModalData {
   params: object;
-  porpouse: string;
+  purpose: string;
   modalBool: boolean;
 }
-type ThemeMode = 'light' | 'dark' | 'system';
-type ThemePreset = 'mono' | 'paper' | 'midnight';
-type FontFamily = 'system' | 'serif' | 'monospace';
+export type ThemeMode = 'light' | 'dark' | 'system';
+export type ThemePreset = 'mono' | 'paper' | 'midnight';
+export type FontFamily = 'system' | 'serif' | 'monospace';
 
-interface IAppSettings {
+export interface IAppSettings {
   themeMode: ThemeMode;
   themePreset: ThemePreset;
   accentColor: string | null;

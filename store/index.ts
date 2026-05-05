@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import type { IAppSettings, IModalData, ITask } from '@/types';
 interface IGlobalTaskState {
   tasks: ITask[];
   setTasks: (tasks: ITask[]) => void;
@@ -18,7 +19,7 @@ const useGlobalStore = create<IGlobalTaskState>()(
   persist(
     (set, get) => ({
       tasks: [],
-      modalData: { params: {}, modalBool: false, porpouse: '' },
+      modalData: { params: {}, modalBool: false, purpose: '' },
       settings: {
         themeMode: 'system',
         themePreset: 'mono',

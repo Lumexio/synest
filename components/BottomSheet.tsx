@@ -172,6 +172,7 @@ const styles = StyleSheet.create({
     height: 20,
     width: 350,
     borderBottomWidth: 1,
+    borderBottomColor: 'transparent',
     margin: 15,
 
     fontSize: 20,
